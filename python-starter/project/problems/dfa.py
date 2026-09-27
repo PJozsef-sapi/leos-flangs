@@ -23,7 +23,7 @@ class DfaProblem(Problem):
         """
         return bool(args.check)
 
-    def _test(self, dfa: Dfa, word: str) -> tuple[str, str]:
+    def _test(self, dfa: Dfa, word: str) -> str:
         """
         Tests a word against the DFA.
         """
@@ -31,11 +31,11 @@ class DfaProblem(Problem):
         current_state: str = dfa.start_state
 
         for letter in word:
-            if (current_state, letter) not in dfa.transitions: return word, 'REJECTED'
+            if (current_state, letter) not in dfa.transitions: return 'NEM'
 
             current_state = dfa.transitions[(current_state, letter)]
 
-        return (word, 'ACCEPTED') if current_state in dfa.accept_states else (word, 'REJECTED')
+        return 'IGEN' if current_state in dfa.accept_states else 'NEM'
 
     def run(self, args):
 
@@ -59,7 +59,7 @@ class DfaProblem(Problem):
 
         dfa: Dfa = Dfa(states, alphabet, start_state, accept_states, transitions)
 
-        results: list[tuple[str, str]] = [self._test(dfa, word) for word in words]
+        results: list[str] = [self._test(dfa, word) for word in words]
 
         with open(f_out, 'w') as f2:
-            f2.write('\n'.join([f'{word} {result}' for (word, result) in results]))
+            f2.write('\n'.join(results))
