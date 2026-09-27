@@ -1,8 +1,13 @@
+# Python Specific
 __pycache__
 *.py[c|o]
 
+# C/C++ Specific
 CMakeCache.txt
 CMakeFiles
 *.cmake
 Makefile
 *.exe
+
+# Local Testing
+localtests
