@@ -42,7 +42,7 @@ class DfaProblem(Problem):
         # Determine input and output files
         f_in: str = args.input
         f_out: str = args.output
-        words: str = args.check.split(',')
+        words: list[str] = args.check.split(',')
 
         with open(f_in, 'r') as f1:
             lines = [line.strip() for line in f1 if line.strip() != '']
