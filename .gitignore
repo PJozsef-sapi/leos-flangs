@@ -11,3 +11,6 @@ Makefile
 
 # Local Testing
 localtests
+
+# VS Code
+.vscode
