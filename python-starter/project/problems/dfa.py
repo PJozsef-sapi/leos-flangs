@@ -1,4 +1,4 @@
-from project.types.dfa import Dfa
+from project.models.dfa import Dfa
 from project.problem import Problem
 
 from argparse import ArgumentParser
@@ -23,43 +23,15 @@ class DfaProblem(Problem):
         """
         return bool(args.check)
 
-    def _test(self, dfa: Dfa, word: str) -> str:
-        """
-        Tests a word against the DFA.
-        """
-
-        current_state: str = dfa.start_state
-
-        for letter in word:
-            if (current_state, letter) not in dfa.transitions: return 'NEM'
-
-            current_state = dfa.transitions[(current_state, letter)]
-
-        return 'IGEN' if current_state in dfa.accept_states else 'NEM'
-
     def run(self, args):
-
-        # Determine input and output files
         f_in: str = args.input
         f_out: str = args.output
         words: list[str] = args.check.split(',')
 
-        with open(f_in, 'r') as f1:
-            lines = [line.strip() for line in f1 if line.strip() != '']
 
-        states: set[str] = set(lines[0].split(' '))
-        alphabet: set[str] = set(lines[1].split(' '))
-        start_state: str = lines[2]
-        accept_states: set[str] = set(lines[3].split(' '))
+        dfa: Dfa = Dfa.from_file(f_in)
 
-        transitions: dict[tuple[str, str], str] = {}
-        for line in lines[4:]:
-            state1, symbol, state2 = line.split(' ')
-            transitions[(state1, symbol)] = state2
+        results: list[str] = [dfa.test_word(word) for word in words]
 
-        dfa: Dfa = Dfa(states, alphabet, start_state, accept_states, transitions)
-
-        results: list[str] = [self._test(dfa, word) for word in words]
-
-        with open(f_out, 'w') as f2:
-            f2.write('\n'.join(results))
+        with open(f_out, 'w') as file:
+            file.write('\n'.join(results))
