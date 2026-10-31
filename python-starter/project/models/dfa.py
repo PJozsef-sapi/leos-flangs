@@ -8,23 +8,6 @@ class Dfa:
     accept_states: set[str]
     transitions: dict[tuple[str, str], str]
 
-    @classmethod
-    def from_file(cls, filename: str) -> "Dfa":
-        with open(filename, 'r') as file:
-            lines = [line.strip() for line in file if line.strip() != '']
-
-            states: set[str] = set(lines[0].split())
-            alphabet: set[str] = set(lines[1].split())
-            start_state: str = lines[2]
-            accept_states: set[str] = set(lines[3].split())
-
-            transitions: dict[tuple[str, str], str] = {}
-            for line in lines[4:]:
-                state, symbol, target = line.split()
-                transitions[(state), symbol] = target
-
-        return cls(states, alphabet, start_state, accept_states, transitions)
-
     def test_word(self, word: str) -> str:
         current_state: str = self.start_state
 

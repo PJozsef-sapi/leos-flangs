@@ -1,5 +1,6 @@
-from project.models.dfa import Dfa
+from project.models import Dfa
 from project.problem import Problem
+from project.reader import from_file
 
 from argparse import ArgumentParser
 
@@ -29,9 +30,13 @@ class DfaProblem(Problem):
         words: list[str] = args.check.split(',')
 
 
-        dfa: Dfa = Dfa.from_file(f_in)
+        automaton = from_file(f_in)
 
-        results: list[str] = [dfa.test_word(word) for word in words]
+        if not isinstance(automaton, Dfa):
+            print(f'Expected type Dfa, got type {type(automaton).__name__}')
+            return
+
+        results: list[str] = [automaton.test_word(word) for word in words]
 
         with open(f_out, 'w') as file:
             file.write('\n'.join(results))

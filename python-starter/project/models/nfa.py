@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from project.models.dfa import Dfa
+from .dfa import Dfa
 from project.errors import InvalidStateError, InvalidSymbolError, MalformedInputError
 
 @dataclass

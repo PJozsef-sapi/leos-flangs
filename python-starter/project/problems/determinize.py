@@ -1,8 +1,7 @@
 from argparse import ArgumentParser
 
-from project.models.dfa import Dfa
+from project.models import Dfa, Nfa
 from project.errors import InvalidInputError
-from project.models.nfa import Nfa
 from project.problem import Problem
 
 class DeterminizeProblem(Problem):
