@@ -1,4 +1,5 @@
 from argparse import ArgumentParser
+from project.reader import from_file
 
 from project.models import Dfa, Nfa
 from project.errors import InvalidInputError
@@ -36,7 +37,8 @@ class DeterminizeProblem(Problem):
         f_out: str = args.output
 
         try:
-            nfa: Nfa = Nfa.from_file(f_in)
+            automaton = from_file(f_in)
+            nfa: Nfa = automaton if isinstance(automaton, Nfa) else Nfa.from_dfa(automaton)
             dfa: Dfa = nfa.determinize()
 
             with open(f_out, 'w') as file:

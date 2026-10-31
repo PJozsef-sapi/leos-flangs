@@ -12,34 +12,14 @@ class Nfa:
     transitions: dict[tuple[str, str], set[str]]
 
     @classmethod
-    def from_file(cls, filename: str) -> "Nfa":
-        with open(filename, 'r') as file:
-            lines = [line.strip() for line in file]
-
-            states: set[str] = set(lines[0].split())
-            alphabet: set[str] = set(lines[1].split())
-            start_state: str = lines[2]
-            accept_states: set[str] = set(lines[3].split())
-
-            transitions: dict[tuple[str, str], set[str]] = {}
-            for line_number, line in enumerate(lines[4:], start = 5):
-                try:
-                    state1, symbol, state2 = line.split()
-                except ValueError:
-                    raise MalformedInputError(f'File {filename}, Line {line_number}: Expected "state symbol state", got "{line}".') from None
-
-                if state1 not in states:
-                    raise InvalidStateError(f'File {filename}, Line {line_number}: State {state1} not in state list.')
-                if state2 not in states:
-                    raise InvalidStateError(f'File {filename}, Line {line_number}: State {state2} not in state list.')
-                if symbol not in alphabet:
-                    raise InvalidSymbolError(f'File {filename}, Line {line_number}: Symbol {symbol} not in alphabet.')
-                
-                if (state1, symbol) not in transitions:
-                    transitions[(state1, symbol)] = {state2}
-                else: transitions[(state1, symbol)].add(state2)
-
-        return cls(states, alphabet, start_state, accept_states, transitions)
+    def from_dfa(cls, dfa: Dfa) -> "Nfa":
+        return cls(
+            set(dfa.states),
+            set(dfa.alphabet),
+            dfa.start_state,
+            set(dfa.accept_states),
+            { key: {target} for key, target in dfa.transitions.items() }
+        )
 
     def determinize(self) -> Dfa:
         start: frozenset[str] = frozenset([self.start_state])
