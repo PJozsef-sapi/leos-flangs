@@ -8,11 +8,11 @@ class Dfa:
     accept_states: set[str]
     transitions: dict[tuple[str, str], str]
 
-    def complete(self) -> "Dfa":
+    def completed(self) -> "Dfa":
         if self.is_complete(): return self
 
         n: int = max(int(state[1:]) for state in self.states)
-        trap: str = f'q{n+1}'
+        trap: str = f'{self.start_state[0]}{n+1}'
 
         all_states: set[str] = self.states | {trap}
         new_transitions = dict(self.transitions)
@@ -24,9 +24,9 @@ class Dfa:
 
         return Dfa(
             states=all_states,
-            alphabet=self.alphabet,
+            alphabet=set(self.alphabet),
             start_state=self.start_state,
-            accept_states=self.accept_states,
+            accept_states=set(self.accept_states),
             transitions=new_transitions
         )
 
@@ -70,4 +70,19 @@ class Dfa:
         ]
 
         return '\n'.join([states_line, alphabet_line, start_line, accept_line, *transition_lines])
+
+    def reachable_states(self) -> set[str]:
+        reachable: set[str] = {self.start_state}
+        pending: list[str] = [self.start_state]
+
+        while pending:
+            curr: str = pending.pop(0)
+
+            for symbol in self.alphabet:
+                target: str | None = self.transitions.get((curr, symbol))
+                if target is not None and target not in reachable:
+                    reachable.add(target)
+                    pending.append(target)
+
+        return reachable
     
