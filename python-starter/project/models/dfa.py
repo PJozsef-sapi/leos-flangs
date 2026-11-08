@@ -1,4 +1,6 @@
 from dataclasses import dataclass
+from itertools import combinations
+from project.naming import rename
 
 @dataclass
 class Dfa:
@@ -87,21 +89,80 @@ class Dfa:
         return reachable
 
     def pruned(self) -> "Dfa":
-        keep: set[str] = self.reachable_states()
-
-        states: set[str] = keep
-        accept_states: set[str] = self.accept_states & keep
-        transitions: dict[tuple[str, str], str] = {
-            key: target
-            for key, target in self.transitions.items()
-            if key[0] in keep
-        }
-
         return Dfa(
-            states=states,
+            states=self.reachable_states(),
             alphabet=set(self.alphabet),
             start_state=self.start_state,
-            accept_states=accept_states,
-            transitions=transitions
+            accept_states=self.accept_states & self.reachable_states(),
+            transitions={
+                key: target
+                for key, target in self.transitions.items()
+                if key[0] in self.reachable_states()
+            }
+        )
+
+    def minimized(self) -> "Dfa":
+        pairs: set[frozenset[str]] = {frozenset(pair) for pair in combinations(self.states, 2)}
+        marked: set[frozenset[str]] = set()
+
+        for p, q in pairs:
+            if (p in self.accept_states) != (q in self.accept_states):
+                marked.add(frozenset({p, q}))
+
+        changed: bool = True
+        while changed:
+            changed = False
+
+            for p, q in pairs - marked:
+                for symbol in self.alphabet:
+                    targets: frozenset[str] = frozenset({ self.transitions[(p, symbol)], self.transitions[(q, symbol)] })
+                    if targets in marked:
+                        marked.add(frozenset({p, q}))
+                        changed = True
+                        break
+
+        unmarked: set[frozenset[str]] = pairs - marked
+        rep: dict[str, str] = {}
+
+        for s in self.states:
+            group = {s}
+            for pair in unmarked:
+                if s in pair: group |= pair
+            rep[s] = min(group, key=self._state_key)
+
+        return Dfa(
+            states={rep[s] for s in self.states},
+            alphabet=set(self.alphabet),
+            start_state=rep[self.start_state],
+            accept_states={rep[s] for s in self.accept_states},
+            transitions={
+                (rep[source], symbol): rep[target]
+                for (source, symbol), target in self.transitions.items()
+            }
+        )
+
+    def without(self, drop: set[str]) -> "Dfa":
+        return Dfa(
+            states=self.states - drop,
+            alphabet=set(self.alphabet),
+            start_state=self.start_state,
+            accept_states=self.accept_states - drop,
+            transitions = {
+                (source, symbol): target
+                for (source, symbol), target in self.transitions.items()
+                if source not in drop and target not in drop
+            }
+        )
+
+    def renamed(self) -> "Dfa":
+        return Dfa(
+            states={rename(s) for s in self.states},
+            alphabet=set(self.alphabet),
+            start_state=rename(self.start_state),
+            accept_states={rename(s) for s in self.accept_states},
+            transitions={
+                (rename(source), symbol): rename(target)
+                for (source, symbol), target in self.transitions.items()
+            }
         )
     
