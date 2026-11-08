@@ -85,4 +85,23 @@ class Dfa:
                     pending.append(target)
 
         return reachable
+
+    def pruned(self) -> "Dfa":
+        keep: set[str] = self.reachable_states()
+
+        states: set[str] = keep
+        accept_states: set[str] = self.accept_states & keep
+        transitions: dict[tuple[str, str], str] = {
+            key: target
+            for key, target in self.transitions.items()
+            if key[0] in keep
+        }
+
+        return Dfa(
+            states=states,
+            alphabet=set(self.alphabet),
+            start_state=self.start_state,
+            accept_states=accept_states,
+            transitions=transitions
+        )
     
