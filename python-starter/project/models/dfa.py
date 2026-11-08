@@ -8,6 +8,28 @@ class Dfa:
     accept_states: set[str]
     transitions: dict[tuple[str, str], str]
 
+    def complete(self) -> "Dfa":
+        if self.is_complete(): return self
+
+        n: int = max(int(state[1:]) for state in self.states)
+        trap: str = f'q{n+1}'
+
+        all_states: set[str] = self.states | {trap}
+        new_transitions = dict(self.transitions)
+
+        for state in all_states:
+            for symbol in self.alphabet:
+                if (state, symbol) not in new_transitions:
+                    new_transitions[(state, symbol)] = trap
+
+        return Dfa(
+            states=all_states,
+            alphabet=self.alphabet,
+            start_state=self.start_state,
+            accept_states=self.accept_states,
+            transitions=new_transitions
+        )
+
     def test_word(self, word: str) -> str:
         current_state: str = self.start_state
 
@@ -17,6 +39,13 @@ class Dfa:
             current_state = self.transitions[(current_state, symbol)]
 
         return 'IGEN' if current_state in self.accept_states else 'NEM'
+
+    def is_complete(self) -> bool:
+        return all(
+            (state, symbol) in self.transitions
+            for state in self.states
+            for symbol in self.alphabet
+        )
 
     @staticmethod
     def _state_key(name: str) -> int:
