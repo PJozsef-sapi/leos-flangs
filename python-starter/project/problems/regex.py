@@ -24,6 +24,8 @@ class RegexProblem(Problem):
             match args.rgx:
                 case 1:
                     output: str = self._rx1(lines)
+                case 2:
+                    output: str = self._rx2(lines)
                 case _:
                     pass
 
@@ -52,3 +54,16 @@ class RegexProblem(Problem):
         counts = [sum(1 for line in lines if p.search(line)) for p in patterns]
 
         return '\n'.join(str(c) for c in counts)
+
+    def _rx2(self, lines: list[str]) -> str:
+        ERROR = re.compile(r'^\S+\s+\S+\s+\d+\s+\d+\s+E')
+        errors: list[str] = [line for line in lines if ERROR.search(line)]
+
+        JAVA_FILES = re.compile(r'\(([a-zA-Z0-9]+\.java):\d+\)')
+        names = [
+            name
+            for line in errors
+            for name in JAVA_FILES.findall(line)
+        ]
+
+        return '\n'.join(names)
