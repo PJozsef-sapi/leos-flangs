@@ -1,6 +1,9 @@
 from argparse import ArgumentParser
+
 from project.problem import Problem
-import re
+
+from re import compile
+from re import Pattern
 
 class RegexProblem(Problem):
 
@@ -26,6 +29,8 @@ class RegexProblem(Problem):
                     output: str = self._rx1(lines)
                 case 2:
                     output: str = self._rx2(lines)
+                case 3:
+                    output: str = self._rx3(lines)
                 case _:
                     pass
 
@@ -38,17 +43,17 @@ class RegexProblem(Problem):
         PREFIX = TIMESTAMP + IDS
 
 
-        patterns = [
-            re.compile(r'^10-15'),                         # date
-            re.compile(r'^10-15\s+10:18:51'),              # datetime
-            re.compile(r'^\S+\s+(?:\d{2}:){2}51\.'),       # 51 seconds (from timestamp)
-            re.compile(PREFIX + r'\w\s+lowmemorykiller:'), # lowmemorykiller tag
-            re.compile(r'^\S+\s+10:18:51\.\d{3}\s+221\b'), # 221 PID at 10:18:51
-            re.compile(PREFIX + r'E\s'),                   # Errors
-            re.compile(PREFIX + r'W\s+PackageManager:'),   # PackageManageer Warnings
-            re.compile(PREFIX + r'D\s+.*ExoPlayer'),       # ExoPlayer Debug
-            re.compile(PREFIX + r'[EW]\s+.*\.java:'),      # .java file Warnings and Errors
-            re.compile(PREFIX + r'[IDVEFAW]\s+.+?:\s.*Thread')
+        patterns: list[Pattern[str]] = [
+            compile(r'^10-15'),                         # date
+            compile(r'^10-15\s+10:18:51'),              # datetime
+            compile(r'^\S+\s+(?:\d{2}:){2}51\.'),       # 51 seconds (from timestamp)
+            compile(PREFIX + r'\w\s+lowmemorykiller:'), # lowmemorykiller tag
+            compile(r'^\S+\s+10:18:51\.\d{3}\s+221\b'), # 221 PID at 10:18:51
+            compile(PREFIX + r'E\s'),                   # Errors
+            compile(PREFIX + r'W\s+PackageManager:'),   # PackageManageer Warnings
+            compile(PREFIX + r'D\s+.*ExoPlayer'),       # ExoPlayer Debug
+            compile(PREFIX + r'[EW]\s+.*\.java:'),      # .java file Warnings and Errors
+            compile(PREFIX + r'[IDVEFAW]\s+.+?:\s.*Thread')
         ]
 
         counts = [sum(1 for line in lines if p.search(line)) for p in patterns]
@@ -56,10 +61,10 @@ class RegexProblem(Problem):
         return '\n'.join(str(c) for c in counts)
 
     def _rx2(self, lines: list[str]) -> str:
-        ERROR = re.compile(r'^\S+\s+\S+\s+\d+\s+\d+\s+E')
+        ERROR = compile(r'^\S+\s+\S+\s+\d+\s+\d+\s+E')
         errors: list[str] = [line for line in lines if ERROR.search(line)]
 
-        JAVA_FILES = re.compile(r'\(([a-zA-Z0-9]+\.java):\d+\)')
+        JAVA_FILES = compile(r'\(([a-zA-Z0-9]+\.java):\d+\)')
         names = [
             name
             for line in errors
@@ -67,3 +72,22 @@ class RegexProblem(Problem):
         ]
 
         return '\n'.join(names)
+
+    def _rx3(self, lines: list[str]) -> str:
+        LINE: Pattern[str] = compile(r'(([0-9-]+ [0-9:.]+) +([0-9]+) +([0-9]+) ([IDVEFAW]) (.+?):(?: (.+))?)')
+
+        seen: set[str] = set()
+        order: list[str] = []
+
+        for line in lines:
+            matching = LINE.search(line)
+            if matching is None:
+                continue
+
+            pid: str = matching.group(3)
+            if pid not in seen:
+                seen.add(pid)
+                order.append(pid)
+
+        return '\n'.join(order)
+    
