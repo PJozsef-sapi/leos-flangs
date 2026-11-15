@@ -33,6 +33,8 @@ class RegexProblem(Problem):
                     output: str = self._rx3(lines)
                 case 4:
                     output: str = self._rx4(lines)
+                case 5:
+                    output: str = self._rx5(lines)
                 case _:
                     pass
 
@@ -110,3 +112,22 @@ class RegexProblem(Problem):
 
         most: tuple[str, int] = counts.most_common(1)[0]
         return f'PID={most[0]} ({most[1]} errors)'
+
+    def _rx5(self, lines: list[str]) -> str:
+        ERROR = compile(r'^\S+\s+\S+\s+\d+\s+\d+\s+E')
+        LINE: Pattern[str] = compile(r'(([0-9-]+ [0-9:.]+) +([0-9]+) +([0-9]+) ([IDVEFAW]) (.+?):(?: (.+))?)')
+
+        errors: list[str] = [line for line in lines if ERROR.search(line)]
+
+        count: int = 0
+        for err in errors:
+            matching = LINE.match(err)
+            if matching is None:
+                continue
+
+            pid: str = matching.group(3)
+            tid: str = matching.group(4)
+
+            if pid == tid: count += 1
+
+        return str(count)
