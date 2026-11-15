@@ -1,9 +1,9 @@
 from argparse import ArgumentParser
-
-from project.problem import Problem
-
+from collections import Counter
 from re import compile
 from re import Pattern
+
+from project.problem import Problem
 
 class RegexProblem(Problem):
 
@@ -31,6 +31,8 @@ class RegexProblem(Problem):
                     output: str = self._rx2(lines)
                 case 3:
                     output: str = self._rx3(lines)
+                case 4:
+                    output: str = self._rx4(lines)
                 case _:
                     pass
 
@@ -90,4 +92,21 @@ class RegexProblem(Problem):
                 order.append(pid)
 
         return '\n'.join(order)
-    
+
+    def _rx4(self, lines: list[str]) -> str:
+        ERROR = compile(r'^\S+\s+\S+\s+\d+\s+\d+\s+E')
+        LINE: Pattern[str] = compile(r'(([0-9-]+ [0-9:.]+) +([0-9]+) +([0-9]+) ([IDVEFAW]) (.+?):(?: (.+))?)')
+
+        errors: list[str] = [line for line in lines if ERROR.search(line)]
+
+        counts: Counter[str] = Counter()
+        for err in errors:
+            matching = LINE.match(err)
+            if matching is None:
+                continue
+
+            pid: str = matching.group(3)
+            counts[pid] += 1
+
+        most: tuple[str, int] = counts.most_common(1)[0]
+        return f'PID={most[0]} ({most[1]} errors)'
